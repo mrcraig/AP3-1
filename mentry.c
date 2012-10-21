@@ -23,7 +23,6 @@ MEntry *me_get(FILE *fd){
 	char line1[MAXLINE+1];
 	char line2[MAXLINE+1];
 	char line3[MAXLINE+1];
-	char house_num[5];
 
 	/** loop counter */
 	int i;
@@ -43,11 +42,17 @@ MEntry *me_get(FILE *fd){
 
 		/** import surname (lowercase) to MEntry */
 		for(i=0;line1[i]!=',';i++){
-			me->surname = strcat(me->surname,tolower(line1[i]));	
+			me->surname[i] = (char)tolower(line1[i]);	
 		}
 
 		/** import house number to MEntry */
 		me->house_number = strtol(line2,NULL,10);
+
+		/** import postcode to MEntry */
+		for(i=0;line3[i]!='\n';i++){
+			if(isalpha(line3[i]))
+				me->postcode[i]=line3[i];
+		}
 
 	}
 	return me; 
@@ -71,7 +76,7 @@ void me_print(MEntry *me, FILE *fd){
 	int i;
 	/** Print full address */
 	for(i=0;me->*(full_address+i)!='\0';i++){
-		printf("%c",me->*(full_address+i));
+		printf("%c",me->full_address[i]);
 	}
 }
 
