@@ -139,6 +139,7 @@ int me_compare(MEntry *me1, MEntry *me2){
 	return 1;
 }
 
+/** Frees memory from heap at me */
 void me_destroy(MEntry *me){
 	free(me);
 }

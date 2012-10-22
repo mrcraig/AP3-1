@@ -11,7 +11,7 @@ int main(void){
 	printf("%s %d","\nHouse_Num:",me1->house_number);
 	printf("%s %s","\nPostcode:",me1->postcode);
 	printf("%s %s","\nFullAddr:\n",me1->full_address);
-	printf("%s %d","\nHash:",me_hash(me1,83));
+	printf("%s %d","\nHash:",me_hash(me1,10));
 
 	printf("%s","=== me2 ===\n");
 	me_print(me2,stdout);
@@ -19,7 +19,7 @@ int main(void){
 	printf("%s %d","\nHouse_Num:",me2->house_number);
 	printf("%s %s","\nPostcode:",me2->postcode);
 	printf("%s %s","\nFullAddr:\n",me2->full_address);
-	printf("%s %d","\nHash:",me_hash(me2,83));
+	printf("%s %d","\nHash:",me_hash(me2,10));
 
 	
 	
