@@ -40,9 +40,18 @@ MEntry *me_get(FILE *fd){
 
 		me->fulladdress = strcat(line1,strcat(line2,line3));
 
-		/** import surname (lowercase) to struct */
+		/** import surname (lowercase) to MEntry */
 		for(i=0;line1[i]!=',';i++){
-			me->surname = strcat(me->surname,strtol(line1[i]));	
+			me->surname[i] = (char)tolower(line1[i]);	
+		}
+
+		/** import house number to MEntry */
+		me->house_number = strtol(line2,NULL,10);
+
+		/** import postcode to MEntry */
+		for(i=0;line3[i]!='\n';i++){
+			if(isalpha(line3[i]))
+				me->postcode[i]=line3[i];
 		}
 
 	}
