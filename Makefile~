@@ -1,2 +1,0 @@
-OBJECTS = mentry.c
-CFLAGS = -w -Wall
