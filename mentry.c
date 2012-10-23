@@ -70,11 +70,6 @@ MEntry *me_get(FILE *fd){
 			}
 		}
 
-		/** Free temporary array data 
-		free(line1);
-		free(line2);
-		free(line3); */
-
 	}
 	return me; 
 }
