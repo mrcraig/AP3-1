@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "mentry.h"
-#include "mlist.h"
+#include "mlistLL.h"
 
 static void usage(void) {
 	fprintf(stderr, "usage: finddupl [-v]\n");
