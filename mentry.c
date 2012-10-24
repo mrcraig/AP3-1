@@ -45,11 +45,6 @@ MEntry *me_get(FILE *fd){
 		if(line1[0]=='\0'){
 			return NULL;
 		}
-/**BUGFIX
-		printf("%s",line1);
-		printf("\n%s",line2);
-		printf("\n%s",line3);*/
-
 
 		/** Import full address by concatenating three lines */
 		sprintf(me->full_address,"%s%s%s",line1,line2,line3);
