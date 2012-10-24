@@ -75,6 +75,25 @@ MList *ml_create(void) {
 }
 
 int ml_add(MList **ml, MEntry *me) {
+	unsigned long hash;
+	int i;
+
+	/** Compute hash value of item */
+	hash = me_hash(me);
+
+	/** allocate bucket space for new entry */
+	bucket bucket_new = malloc(sizeof(bucket))
+	bucket_new->entry = me;
+
+	/** choose appropriate bucket array from hash table */
+	bucket buck = me->hash[hash];
+
+	/** loop until free bucket */
+	while(buck->next!=NULL){
+		buck = buck->next;
+	}
+	
+	buck->next = bucket_new;	
 	
 }
 
