@@ -54,16 +54,22 @@ MList *ml_create(void) {
 	/** Set mlist size */
 	ml->size = size;
 
+	return ml;
+
 }
 
+/** adds MEntry to list,
+Returns 1 if successful
+Returns 0 if not successful
+*/
 int ml_add(MList **ml, MEntry *me) {
 	MList *m = *ml;
 	unsigned long hashval;
 	int i;
-	bucket *buck;
+	bucket *buck,*bucket_new;
 
 	/** allocate bucket space for new entry */
-	bucket *bucket_new = malloc(sizeof(bucket));
+	bucket_new = malloc(sizeof(bucket));
 
 	/** Compute hash value of item */
 	hashval = me_hash(me,m->size);
@@ -87,13 +93,52 @@ int ml_add(MList **ml, MEntry *me) {
 	
 }
 
+/** looks for entry in ml matching me
+if found, return pointer, if not return NULL */
 MEntry *ml_lookup(MList *ml, MEntry *me) {
+	unsigned long hashval;
+	bucket *buck_cursor;
 	
 	/** print statement if verbose */
 	if(ml_verbose)
 		fprintf(stderr,"mlist: ml_lookup() entered\n");
+
+	/** calculate hashval of me */
+	hashval = me_hash(me,ml->size);
+
+	/** loop through cursor values checking entries */
+	buck_cursor = (ml->hash)+hashval;
+
+	while(buck_cursor->next!=NULL){
+		if(buck_cursor->entry==me){
+			/**found match, return pointer */
+			return buck_cursor->entry;
+		} else {
+			/** not found, continue searching*/
+			buck_cursor = buck_cursor->next;
+		}
+	}
+
+	/** entry was not found, return NULL */
+	return NULL;
 }
 
 void ml_destroy(MList *ml) {
+	int i;
+	bucket *cursor;
+	bucket *next_cursor;
+	
+	/** for every bucket array */
+	for(i=0;i<ml->size,i++){
+		cursor = (ml->hash) + i;
+		/** free every bucket in each hash entry */
+		while(cursor->next!=NULL){
+			next_cursor = (cursor->next)+1
+			free(cursor)
+			cursor = next_cursor
+		}
+	}
 
+	/** free mlist structure */
+	free(ml);
 }

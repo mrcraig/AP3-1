@@ -53,6 +53,7 @@ MEntry *me_get(FILE *fd){
 		for(i=0;line1[i]!=',';i++){
 			me->surname[i] = (char)tolower(line1[i]);	
 		}
+		me->surname[i] = '\0';
 
 		/** import house number to MEntry */
 		me->house_number = atoi(line2);
@@ -64,6 +65,7 @@ MEntry *me_get(FILE *fd){
 				j++;
 			}
 		}
+		me->postcode[j] = '\0';
 
 	}
 	return me; 
