@@ -18,7 +18,7 @@ typedef struct mlistnode {
 
 struct mlist {
 	int size;
-	bucket *hash;
+	bucket **hash;
 };
 
 int ml_verbose=0;
@@ -44,12 +44,15 @@ MList *ml_create(void) {
 		return ml;
 	}
 
-	if( ( hashtab = (bucket *) malloc(sizeof(bucket)*size)) == NULL){
-		return hashtab;
+	if( (ml->hash = (bucket **) calloc(size,sizeof(bucket *)))!=NULL){
+		for(i=0;i<size;i++){
+			ml->hash[i] = (bucket *) malloc(sizeof(bucket));
+			ml->hash[i]->next = NULL;
+		}
 	}
 
 	/** Set hash pointer to bucket */
-	ml->hash = hashtab;
+	ml->size=size;	
 
 	/** Set mlist size */
 	ml->size = size;
@@ -68,27 +71,33 @@ int ml_add(MList **ml, MEntry *me) {
 	int i;
 	bucket *buck,*bucket_new;
 
-	/** allocate bucket space for new entry */
-	bucket_new = malloc(sizeof(bucket));
+	/** check duplicates 
+	if (ml_lookup(ml, m) != NULL)
+		return 1;
+
+	/** allocate space for next entry */
+	if((bucket_new = (bucket *) malloc(sizeof(bucket)))==NULL)
+		return 0;
+
+	bucket_new->next = NULL;
 
 	/** Compute hash value of item */
 	hashval = me_hash(me,m->size);
 
-	/** check successful */
-	if(bucket_new == NULL)
-		return 0;
-
-	bucket_new->entry = me;
 
 	/** choose appropriate bucket array from hash table */
-	buck = (m->hash)+hashval;
+	buck = m->hash[hashval];
+
 
 	/** loop until free bucket */
 	while(buck->next!=NULL){
 		buck = buck->next;
 	}
 	
+	/** set next to an empty bucket, and the entry to mentry */
 	buck->next = bucket_new;
+	buck->entry = me;
+
 	return 1;	
 	
 }
@@ -105,6 +114,7 @@ MEntry *ml_lookup(MList *ml, MEntry *me) {
 
 	/** calculate hashval of me */
 	hashval = me_hash(me,ml->size);
+
 
 	/** loop through cursor values checking entries */
 	buck_cursor = (ml->hash)+hashval;
@@ -124,21 +134,25 @@ MEntry *ml_lookup(MList *ml, MEntry *me) {
 }
 
 void ml_destroy(MList *ml) {
+	/*
 	int i;
 	bucket *cursor;
 	bucket *next_cursor;
 	
-	/** for every bucket array */
-	for(i=0;i<ml->size,i++){
+	if (ml_verbose)
+		fprintf(stderr, "mlist: ml_destroy() entered\n");
+	
+	/** for every bucket array 
+	for(i=0;i<ml->size;i++){
 		cursor = (ml->hash) + i;
-		/** free every bucket in each hash entry */
+		/** free every bucket in each hash entry 
 		while(cursor->next!=NULL){
-			next_cursor = (cursor->next)+1
-			free(cursor)
-			cursor = next_cursor
+			next_cursor = (cursor->next)+1;
+			free(cursor);
+			cursor = next_cursor;
 		}
 	}
 
-	/** free mlist structure */
-	free(ml);
+	/** free mlist structure 
+	free(ml);*/
 }
