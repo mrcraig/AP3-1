@@ -39,33 +39,74 @@ MList *ml_create(void) {
 		fprintf(stderr,"mlist: creating mailing list\n");
 
 
-
+	/** allocate space for mlist */
 	if( (ml = (MList *) malloc(sizeof(MList))) == NULL){
 		return ml;
 	}
 
-	if( (ml->hash = (bucket **) calloc(size,sizeof(bucket *)))!=NULL){
+	/** Set mlist size */
+	ml->size = size;
+
+	/** allocate and initialise every bucket pointer */
+	if( (ml->hash = (bucket **) calloc(ml->size,sizeof(bucket *)))!=NULL){
 		for(i=0;i<size;i++){
+			/** initialise every bucket */
 			ml->hash[i] = (bucket *) malloc(sizeof(bucket));
 			ml->hash[i]->next = NULL;
 		}
 	}
 
-	/** Set hash pointer to bucket */
-	ml->size=size;	
-
-	/** Set mlist size */
-	ml->size = size;
-
 	return ml;
 
 }
+
+MList *reallocate(MList *ml){
+
+	/** loop counter */
+	int i;
+	
+	/** create a new mailing list with x2 size */	
+	MList *new_ml;
+	size = (ml->size) * 2;
+	new_ml = ml_create();
+
+	/** cursor to loop through old data */
+	bucket *cursor;
+
+	if(ml_verbose)
+		fprintf(stderr,"mlist: resizing hash table\n");
+
+	/** re-add old data from old list into new list */
+	for(i=0;i<ml->size;i++){
+		cursor = ml->hash[i];
+		while(cursor->next!=NULL){
+			/** add each entry */
+			if(cursor->entry!=NULL){
+				ml_add(&new_ml,cursor->entry);
+				cursor = cursor->next;
+			}
+		}
+		/** add last entry in list */
+		//ml_add(new_ml,cursor->entry);
+	}
+
+	/** remove data from old list */
+	//ml_destroy(ml);
+
+	/** return pointer to new list */
+	return new_ml;
+	
+}
+
 
 /** adds MEntry to list,
 Returns 1 if successful
 Returns 0 if not successful
 */
 int ml_add(MList **ml, MEntry *me) {
+	/** counter to determine current bucket size */
+	int bucketsize = 0;
+	
 	MList *m = *ml;
 	unsigned long hashval;
 	int i;
@@ -92,11 +133,15 @@ int ml_add(MList **ml, MEntry *me) {
 	/** loop until free bucket */
 	while(buck->next!=NULL){
 		buck = buck->next;
+		bucketsize++;
 	}
 	
 	/** set next to an empty bucket, and the entry to mentry */
 	buck->next = bucket_new;
 	buck->entry = me;
+
+	if(bucketsize > m->size)
+		ml = reallocate(m);
 
 	return 1;	
 	
@@ -133,26 +178,27 @@ MEntry *ml_lookup(MList *ml, MEntry *me) {
 	return NULL;
 }
 
-void ml_destroy(MList *ml) {
-	/*
+void ml_destroy(MList *ml) {/*
 	int i;
-	bucket *cursor;
-	bucket *next_cursor;
-	
-	if (ml_verbose)
-		fprintf(stderr, "mlist: ml_destroy() entered\n");
-	
-	/** for every bucket array 
-	for(i=0;i<ml->size;i++){
-		cursor = (ml->hash) + i;
-		/** free every bucket in each hash entry 
-		while(cursor->next!=NULL){
-			next_cursor = (cursor->next)+1;
-			free(cursor);
-			cursor = next_cursor;
-		}
-	}
+	bucket *to_delete; /** pointer to node to delete 
+	bucket *next_node;	/** pointer to the next node to delete 
 
-	/** free mlist structure 
+	if(ml_verbose)
+		fprintf(stderr,"mlist: ml_destroy() entered\n");
+	
+	/** loop through each hash entry, then loop through buckets, free'ing 
+	for(i=0;i<size;i++){
+		to_delete = ml->hash[i];
+		while(to_delete->next!=NULL){
+			next_node = to_delete->next;
+			me_destroy(to_delete->entry);
+			free(to_delete);
+			to_delete = next_node;
+		}
+		free(to_delete);
+	}
+	/** free structures 
+	free(ml->hash);
 	free(ml);*/
 }
+
