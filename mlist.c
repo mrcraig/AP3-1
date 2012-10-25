@@ -117,10 +117,10 @@ MEntry *ml_lookup(MList *ml, MEntry *me) {
 
 
 	/** loop through cursor values checking entries */
-	buck_cursor = (ml->hash)+hashval;
+	buck_cursor = ml->hash[hashval];
 
 	while(buck_cursor->next!=NULL){
-		if(buck_cursor->entry==me){
+		if(me_compare(buck_cursor->entry,me)==0){
 			/**found match, return pointer */
 			return buck_cursor->entry;
 		} else {
