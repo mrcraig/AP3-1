@@ -14,6 +14,7 @@ This is my own work as defined in the Academic Ethics agreement I have signed.
 typedef struct mlistnode {
 	struct mlistnode *next;
 	MEntry *entry;
+	int initiated;
 } bucket;
 
 struct mlist {
@@ -56,6 +57,7 @@ MList *ml_create(void) {
 			/** initialise every bucket */
 			ml->hash[i] = (bucket *) malloc(sizeof(bucket));
 			ml->hash[i]->next = NULL;
+			ml->hash[i]->initiated = 0;
 		}
 	}
 	
@@ -71,7 +73,7 @@ void *reallocate(MList *ml){
 		fprintf(stderr,"mlist: resizing hash table\n");
 
 	/** loop counter */
-	int i;
+	int i,j;
 	int bucketcount;
 
 	/** create a new mailing list with x2 size */	
@@ -83,6 +85,7 @@ void *reallocate(MList *ml){
 	bucket *cursor;
 	bucket *new_cursor;
 	bucket *add_cursor;
+
 
 	/** rehash and link old data into new list */
 	unsigned long hashval;
@@ -105,17 +108,26 @@ void *reallocate(MList *ml){
 			bucketcount=0;
 			while(add_cursor->next!=NULL){
 				add_cursor = add_cursor->next;
-				bucketcount++;
 			}
-			if(bucketcount==0)
-				add_cursor->entry = cursor->entry;
-			else
+			
+			if( (new_ml->hash[hashval]->initiated == 0) ){
+				new_ml->hash[hashval] = cursor;
+				new_ml->hash[hashval]->initiated = 1;
+			} 
+		
+			else if( (new_ml->hash[hashval]->initiated == 1) ){
+				new_ml->hash[hashval]->next = cursor;
+				new_ml->hash[hashval]->initiated = 2;
+			} else
 				add_cursor->next = cursor;
 
 			/** update cursor to the next node */
 			cursor = new_cursor;
 		}
+		
 	}
+	free(ml->hash);
+	free(ml);
 
 	return new_ml;
 }
@@ -192,29 +204,27 @@ MEntry *ml_lookup(MList *ml, MEntry *me) {
 	while(buck_cursor->next!=NULL){
 		if(me_compare(buck_cursor->entry,me)==0){
 			/**found match, return pointer */
-			if(ml->size>20){
-				printf("%s %d\n","found",ml->size);
-			}
 			return buck_cursor->entry;
 		} else {
 			/** not found, continue searching*/
 			buck_cursor = buck_cursor->next;
 		}
 	}
+	
 
 	/** entry was not found, return NULL */
 	return NULL;
 }
 
-void ml_destroy(MList *ml) {/*
+void ml_destroy(MList *ml) {
 	int i;
-	bucket *to_delete; /** pointer to node to delete 
-	bucket *next_node;	/** pointer to the next node to delete 
+	bucket *to_delete; /** pointer to node to delete */
+	bucket *next_node;	/** pointer to the next node to delete */
 
 	if(ml_verbose)
 		fprintf(stderr,"mlist: ml_destroy() entered\n");
 	
-	/** loop through each hash entry, then loop through buckets, free'ing 
+	/** loop through each hash entry, then loop through buckets, free'ing */
 	for(i=0;i<size;i++){
 		to_delete = ml->hash[i];
 		while(to_delete->next!=NULL){
@@ -225,7 +235,7 @@ void ml_destroy(MList *ml) {/*
 		}
 		free(to_delete);
 	}
-	/** free structures 
+	/** free structures */
 	free(ml->hash);
-	free(ml);*/
+	free(ml);
 }
