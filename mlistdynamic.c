@@ -24,6 +24,9 @@ struct mlist {
 int ml_verbose=0;
 int size = HASHSIZE;
 
+/** Pointer to point to the correct mlist */
+MList **mlpoint;
+
 
 MList *ml_create(void) {
 	/** Declare mailing list */
@@ -39,41 +42,104 @@ MList *ml_create(void) {
 		fprintf(stderr,"mlist: creating mailing list\n");
 
 
-
+	/** allocate space for mlist */
 	if( (ml = (MList *) malloc(sizeof(MList))) == NULL){
 		return ml;
 	}
 
-	if( (ml->hash = (bucket **) calloc(size,sizeof(bucket *)))!=NULL){
+	/** Set mlist size */
+	ml->size = size;
+
+	/** allocate and initialise every bucket pointer */
+	if( (ml->hash = (bucket **) calloc(ml->size,sizeof(bucket *)))!=NULL){
 		for(i=0;i<size;i++){
+			/** initialise every bucket */
 			ml->hash[i] = (bucket *) malloc(sizeof(bucket));
 			ml->hash[i]->next = NULL;
 		}
 	}
-
-	/** Set hash pointer to bucket */
-	ml->size=size;	
-
-	/** Set mlist size */
-	ml->size = size;
+	
+	
 
 	return ml;
 
 }
+
+void *reallocate(MList *ml){
+
+	if(ml_verbose)
+		fprintf(stderr,"mlist: resizing hash table\n");
+
+	/** loop counter */
+	int i;
+	int bucketcount;
+
+	/** create a new mailing list with x2 size */	
+	MList *new_ml;
+	size = (ml->size) * 2;
+	new_ml = ml_create();
+
+	/** cursor to loop through old data */
+	bucket *cursor;
+	bucket *new_cursor;
+	bucket *add_cursor;
+
+	/** rehash and link old data into new list */
+	unsigned long hashval;
+
+	for(i=0;i<ml->size;i++){
+		cursor = ml->hash[i];
+		while(cursor->next!=NULL){
+			/** loop through every single bucket of every single hashtab entry */
+
+			/** stores location of next node to assign space to */
+			new_cursor = cursor->next;
+			
+			/** set next value of cursor to NULL to indicate last node */
+			cursor->next = NULL;
+
+			hashval = me_hash(cursor->entry,size);
+			add_cursor = new_ml->hash[hashval];
+
+			/** loop through new mlist buckets to find where to put new entry */
+			bucketcount=0;
+			while(add_cursor->next!=NULL){
+				add_cursor = add_cursor->next;
+				bucketcount++;
+			}
+			if(bucketcount==0)
+				add_cursor->entry = cursor->entry;
+			else
+				add_cursor->next = cursor;
+
+			/** update cursor to the next node */
+			cursor = new_cursor;
+		}
+	}
+
+	return new_ml;
+}
+
 
 /** adds MEntry to list,
 Returns 1 if successful
 Returns 0 if not successful
 */
 int ml_add(MList **ml, MEntry *me) {
+	/** counter to determine current bucket size */
+	int bucketsize = 0;
+
 	MList *m = *ml;
-	unsigned long hashval;
+	unsigned long hashval = 0;
 	int i;
 	bucket *buck,*bucket_new;
 
+	//printf("%d\n",m->size);
+
 	/** check duplicates */
-	if (ml_lookup(m, me) != NULL)
+	if (ml_lookup(m, me) != NULL){
 		return 1;
+	}
 
 	/** allocate space for next entry */
 	if((bucket_new = (bucket *) malloc(sizeof(bucket)))==NULL)
@@ -92,11 +158,15 @@ int ml_add(MList **ml, MEntry *me) {
 	/** loop until free bucket */
 	while(buck->next!=NULL){
 		buck = buck->next;
+		bucketsize++;
 	}
 
 	/** set next to an empty bucket, and the entry to mentry */
 	buck->next = bucket_new;
 	buck->entry = me;
+	
+	if(bucketsize > m->size)
+		*ml = reallocate(m);
 
 	return 1;	
 
@@ -105,10 +175,8 @@ int ml_add(MList **ml, MEntry *me) {
 /** looks for entry in ml matching me
 if found, return pointer, if not return NULL */
 MEntry *ml_lookup(MList *ml, MEntry *me) {
-	unsigned long hashval;
+	unsigned long hashval = 0;
 	bucket *buck_cursor;
-
-	int tempsize = ml->size;
 
 	/** print statement if verbose */
 	if(ml_verbose)
@@ -124,6 +192,9 @@ MEntry *ml_lookup(MList *ml, MEntry *me) {
 	while(buck_cursor->next!=NULL){
 		if(me_compare(buck_cursor->entry,me)==0){
 			/**found match, return pointer */
+			if(ml->size>20){
+				printf("%s %d\n","found",ml->size);
+			}
 			return buck_cursor->entry;
 		} else {
 			/** not found, continue searching*/
@@ -132,21 +203,18 @@ MEntry *ml_lookup(MList *ml, MEntry *me) {
 	}
 
 	/** entry was not found, return NULL */
-
-	ml->size = tempsize;
 	return NULL;
 }
 
-
-void ml_destroy(MList *ml) {
+void ml_destroy(MList *ml) {/*
 	int i;
-	bucket *to_delete; /** pointer to node to delete */
-	bucket *next_node;	/** pointer to the next node to delete */
+	bucket *to_delete; /** pointer to node to delete 
+	bucket *next_node;	/** pointer to the next node to delete 
 
 	if(ml_verbose)
 		fprintf(stderr,"mlist: ml_destroy() entered\n");
 	
-	/** loop through each hash entry, then loop through buckets, free'ing */
+	/** loop through each hash entry, then loop through buckets, free'ing 
 	for(i=0;i<size;i++){
 		to_delete = ml->hash[i];
 		while(to_delete->next!=NULL){
@@ -157,7 +225,7 @@ void ml_destroy(MList *ml) {
 		}
 		free(to_delete);
 	}
-	/** free structures */
+	/** free structures 
 	free(ml->hash);
-	free(ml);
+	free(ml);*/
 }
